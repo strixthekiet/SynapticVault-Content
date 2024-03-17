@@ -1,0 +1,129 @@
+---
+tags:
+  - CompSci/cloud-computing/GCP/product/ComputeEngine
+  - CompSci/dev/backend/vm
+---
+# GCP Virtual machines
+### Description:
+- VM instances:
+	- The creaor instant has root priviledges on instant
+		- On a Linux instance, the creator has SSH capability and can use the Cloud Console to grant [[Secure Shell|SSH]] capability to other users.
+		- On a Windows instance, the creator can use the Cloud Console to generate a username and password. and use [[Remote Desktop Protocol|RDP]]
+			- need to have password to access RDP
+	- A vm's lifecycle
+		- ![|400](https://cloud.google.com/static/compute/images/instance-life-cycle.svg)
+		- Needs to shutdown within 90s with shutdown scripts, if not, it will shutdown mechanically
+		- When it is terminated, available actions are:
+			- Change machine type
+			- Migrate instnace to another network
+			- Add/remove attched disk, change auto-delete settings
+			- Modify instance tag
+			- Modify custom VM or project-wide metadata
+			- Remove or set new static IP
+		-  Suspend to preserve the guest OS memory, device state, and application state.
+- Commands to know:
+	- `free`: Check disk
+	- `sudo dmidecode -t 17` check ram
+	- `cproc`: check processors
+	- `lscpu`: check cpu details
+- To schedule regular backup:
+	- `cd home/folder`
+	- create a new file for back up `sudo nano backup.sh`
+	- Make script exucutable: `sudo chmod 755 /home/folder/backup.sh`??
+	- Tells the VM to update every few hours:
+		- `sudo crontab -e`
+		- add `0 */4 * * * /home/minecraft/backup.sh`?
+### 1. Instances
+- Labels:
+	- Use labels to indicate different environments, services, teams, and so on.
+	- Key/value pair
+- Tags
+	- Can have multiple tags
+- Regions and zone
+	- 
+- Machine config:
+	- Order by machine type -> series -> type
+	- Machine family: 
+		- general: best price-performance with most flexible vCPU-memory ratio
+			- E2 is cheapest and fit for most
+				- Also have shared core with other people by context-switching 
+			- N-series support ==commited use== and ==sustained use==
+			- T-series: 
+				- T2D: supported by ==GKE== to help optimize price-performance
+				- Can add T2D nodes to your GKE clusters by specifying the T2D machine type in your GKE node pools.
+		- vCPU optimize
+		- Memory optimize:
+			- M-series: up to 30% sustained use discounts and are also eligible for committed use discounts, bringing additional savings of greater than 60% for three-year commitments.
+		- GPUs optimize:
+			- For ML. 
+	- Can use custom to specify exact amount of vCPU and vRAM but a bit more expensive
+		- Must be multiple of 256mb for memory
+	- vCPU
+		- 1 vCPU  is 1 hardware hyper-thread (so usually half a core)
+		- The network will scale at 2 gigabits per second for each CPU core, except for instances with 2 or 4 CPUs which receive up to 10 gigabits per second of bandwidth.
+	- ...
+- Availability policies
+	- Can set for machine to stop or delete after a set amount of hour or at a time
+	- Choose what happens when vm shut down by accident or hazard
+	- Sustained usage:
+		- It is billed by: second of the usage of vCPU and memory but count for at least 1 min when it starts
+		- Discount if used >25% (-10% price)a month new minute will count for cheaper price bracket
+		- Up to 30% when use 100% of the month
+	- Commit use:
+		- Commit to use it for 1 year or 3 year to get discount
+	- ==Preemptible== Vm:
+		- for Fault-tolerant workload
+		- Discount up to 60-91% discount
+		- Compute Engine might terminate preemptible instances at any time due to system events with 30 seconds warning (for shutdown script)
+		- only 24 hours a time
+		- Good for batch work
+		- No auto migrate, auto restart
+	- Spot VM:
+		- No limit of 24 hours
+		- No auto migrate, auto restart
+- ...
+- [[Compute Engine Storage#1. Disks|Disk]]
+- Identity and API access
+	- Service account: which service account it will be assigned to
+	- Access scope:
+		- Select the type and level of API access to grant the VM (new service account).
+			- Default: read-only access to Storage and Service Management, write access to Stackdriver Logging and Monitoring, read/write access to Service Control.
+- ...
+- Advanced option:
+	- Networking
+		- Network **tags**:
+			- For VPC network's firewall rules
+		- ...
+		- Network interfaces: which network the vm will be in
+			- The network it joins must exist in the zone selected
+			- Each VM can have 8 network interfaces depends on nb of vCPU
+				- each interface join a **different subnet** in the same region
+			- ..
+			- External IP address: 
+				- None: it has no external network
+					- can tunnel through [[GCP IAP]]
+				- Ephermeral: borrow from a pool by Google
+	- ...
+	- Security:
+		- Shielded VM:
+			- include trusted UEFI firmware and come with options for Secure Boot, vTPM, and Integrity Monitoring
+		- VM access:
+			- ,
+		- Manually add ur public SSH key
+	- Disks:
+		- For additional disk
+	- [[#3. Sole-tenant nodes]]
+### 2. Instance template
+### 3. Sole-tenant nodes:
+- To keep your instances physically separated from instances in other projects, or to group your instances together on the same node.
+- if you have existing operating system licenses, you can bring them to Compute Engine using sole-tenant nodes while minimizing the physical core usage with the in-place restart feature.
+### 4. [[Compute Engine Machine image]]
+
+
+
+
+- Create:
+	- You can use startup script to automatically run a script when it boots
+- Spot VM and Premptible vms:
+	- For workload that just let it run for a long period of time
+	- https://cloud.google.com/compute/docs/instances/spot?_ga=2.24043251.-875436373.1698372427
